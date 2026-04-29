@@ -56,7 +56,7 @@ public class SecurityConfig {
                 // /api/auth/login（登录接口）+ 健康检查接口→ 直接放行，不需要登录（相当于前端路由里的 /login 白名单）
                 // 其他所有接口→ 必须登录（必须带合法 Token）才能访问
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/actuator/health").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
                         // 来自网关的已认证请求直接放行
                         .requestMatchers(req -> "true".equals(req.getHeader("X-Auth-Checked"))).permitAll()
                         .anyRequest().authenticated());
