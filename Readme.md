@@ -4,7 +4,7 @@
 
 ## 📋 项目简介
 
-My Blog是一个功能完整的个人博客系统，旨在提供简洁美观的博客展示和管理界面，同时采用现代化的技术栈保证系统的可扩展性和可维护性。
+基于 Vue3 + Vite + TypeScript 前端、Spring Cloud Alibaba 微服务后端、搭配 MySQL、Redis，集成 Nacos 动态配置。通过 Docker、Nginx 实现容器化部署的博客后台工程。架构精简易扩展，可快速复用搭建各类 Web 项目
 
 ## 🛠️ 技术栈
 
