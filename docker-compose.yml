@@ -1,0 +1,56 @@
+services:
+  mysql:
+    image: mysql:8
+    pull_policy: never
+    container_name: blog-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+      - mysql-data:/var/lib/mysql
+    networks:
+      - blog-network
+
+  redis:
+    image: redis:alpine
+    pull_policy: never
+    container_name: blog-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - blog-network
+
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    pull_policy: never
+    container_name: blog-nacos
+    restart: unless-stopped
+    environment:
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=derby
+      - NACOS_AUTH_ENABLE=false
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    networks:
+      - blog-network
+
+volumes:
+  mysql-data:
+  redis-data:
+  nacos-data:
+  nacos-logs:
+
+networks:
+  blog-network:
+    driver: bridge

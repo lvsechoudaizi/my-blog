@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+spring:
+  profiles:
+    active: dev
+
+app:
+  jwt:
+    secret: my-blog-demo-jwt-secret-key-2026-keep-safe
+    expiration-seconds: 7200

@@ -1,0 +1,22 @@
+
+- 日常看文档，从 docs-index.md 进入
+- 做功能前，先看 module-roadmap.md
+- 写代码时，按 coding-conventions.md 执行
+- 每解决一个真实问题，补到对应 docs
+- 每形成一个可重复流程，补到 SKILL.md
+
+- 导航入口： docs-index.md
+- 项目结构： project-structure.md
+- 本地启动： local-dev-runbook.md
+- 认证链路： auth-flow.md
+- 接口约定： api-conventions.md
+- 排障手册： troubleshooting.md
+- 前端样式： frontend-style-guide.md
+- 前端架构： frontend-architecture.md
+- 状态管理： state-management-guide.md
+- 后端服务： backend-service-guide.md
+- 网关鉴权： gateway-auth-spec.md
+- 发布检查： release-checklist.md
+- 编码约定： coding-conventions.md
+- 模块路线图： module-roadmap.md
+- AI 复用能力： SKILL.md

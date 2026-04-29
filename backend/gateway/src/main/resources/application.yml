@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  cloud:
+    gateway:
+      routes:
+        - id: auth-center
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+        - id: blog-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/blog/**
+
+app:
+  jwt:
+    secret: my-blog-demo-jwt-secret-key-2026-keep-safe
