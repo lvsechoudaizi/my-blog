@@ -17,6 +17,21 @@
 - 确认 `mvn -v` 输出中的 Java 版本正确
 - 确认 `node -v` 和 `npm -v` 可用
 
+如果不是指向 JDK 17，执行：
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export PATH="$JAVA_HOME/bin:$PATH"
+```
+验证：
+- 确认 `java -version` 指向 JDK 17
+- 确认 `mvn -v` 输出中的 Java 版本正确
+
+把 JDK 17 设置成默认 如果你希望以后每次打开终端都默认用 JDK 17
+```bash
+echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 17)' >> ~/.zshrc
+echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
 ## 基础设施启动
 
 ### 第一步：进入项目根目录
@@ -53,7 +68,7 @@ http://localhost:8848/nacos
 ## 后端启动顺序
 
 ### 启动之前确保依赖最新
-- 先执行 `mvn clean install -DskipTests` 确保所有依赖都已下载到本地仓库
+- 先执行 `cd backend && mvn clean install -DskipTests` 确保所有依赖都已下载到本地仓库
 - - clean ：清理目标目录（target/），删除之前构建生成的所有文件（如编译后的类文件、JAR包、配置文件等）
 - install ：编译项目源码，运行资源处理，将生成的工件（JAR/WAR）安装到本地 Maven 仓库
 - -DskipTests ：跳过单元测试和集成测试，加快构建速度
@@ -72,18 +87,24 @@ http://localhost:8848/nacos
 
 ### 启动 `auth-center`
 ```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export PATH="$JAVA_HOME/bin:$PATH"
 cd /Users/lijianhua/Documents/其他/个人官网/my-blog/backend/services/auth-center
 mvn spring-boot:run
 ```
 
 ### 启动 `blog-service`
 ```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export PATH="$JAVA_HOME/bin:$PATH"
 cd /Users/lijianhua/Documents/其他/个人官网/my-blog/backend/services/blog-service
 mvn spring-boot:run
 ```
 
 ### 启动 `gateway`
 ```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export PATH="$JAVA_HOME/bin:$PATH"
 cd /Users/lijianhua/Documents/其他/个人官网/my-blog/backend/gateway
 mvn spring-boot:run
 ```
