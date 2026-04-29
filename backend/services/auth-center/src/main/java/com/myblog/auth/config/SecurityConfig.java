@@ -57,6 +57,8 @@ public class SecurityConfig {
                 // 其他所有接口→ 必须登录（必须带合法 Token）才能访问
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/actuator/health").permitAll()
+                        // 来自网关的已认证请求直接放行
+                        .requestMatchers(req -> "true".equals(req.getHeader("X-Auth-Checked"))).permitAll()
                         .anyRequest().authenticated());
         return http.build();
     }
