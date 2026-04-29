@@ -56,14 +56,14 @@
   padding: 12px 14px;
   border-radius: @radius-md;
   color: var(--color-text-secondary);
-  background: rgba(30, 41, 59, 0.6);
+  background: var(--color-bg-panel);
   border: 1px solid transparent;
   transition: background @transition-fast, border-color @transition-fast, transform @transition-fast;
 
   &:hover,
   &.router-link-active {
     transform: translateY(-1px);
-    background: rgba(37, 99, 235, 0.16);
+    background: var(--color-primary-soft);
     border-color: var(--color-border-active);
   }
 }

@@ -2,10 +2,17 @@
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useThemeStore } from '../stores/theme'
 
 const router = useRouter()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
 const { username, displayName, roles, permissions, refreshing } = storeToRefs(userStore)
+const { isDarkMode } = storeToRefs(themeStore)
+
+function handleToggleTheme() {
+  themeStore.toggleTheme()
+}
 
 async function handleRefreshUser() {
   try {
@@ -48,6 +55,9 @@ async function handleLogout() {
         </div>
 
         <div class="layout-actions">
+          <button type="button" class="secondary-button" @click="handleToggleTheme">
+            {{ isDarkMode ? '切换至浅色模式' : '切换至深色模式' }}
+          </button>
           <button type="button" class="secondary-button" :disabled="refreshing" @click="handleRefreshUser">
             {{ refreshing ? '刷新中...' : '刷新用户信息' }}
           </button>

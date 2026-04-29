@@ -46,14 +46,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Spring Boot DevTools for hot reload -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-devtools</artifactId>
-                <version>${spring-boot.version}</version>
-                <scope>runtime</scope>
-                <optional>true</optional>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
