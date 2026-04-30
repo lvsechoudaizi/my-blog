@@ -5,9 +5,17 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+        namespace: my-blog
       config:
         server-addr: 127.0.0.1:8848
-        file-extension: yml
+        file-extension: yaml
+        namespace: my-blog
+        # 加载共享配置
         shared-configs:
           - data-id: common.yml
+            refresh: true
+        # 加载网关专用配置
+        extension-configs:
+          - data-id: gateway.yml
+            group: DEFAULT_GROUP
             refresh: true
