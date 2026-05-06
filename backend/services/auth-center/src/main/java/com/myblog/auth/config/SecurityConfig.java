@@ -76,9 +76,11 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
-            @Value("${app.jwt.secret}") String jwtSecret
+            @Value("${app.jwt.secret}") String jwtSecret,
+            @Value("${app.jwt.token-header:Authorization}") String tokenHeader,
+            @Value("${app.jwt.token-prefix:Bearer}") String tokenPrefix
     ) {
-        return new JwtAuthenticationFilter(jwtSecret);
+        return new JwtAuthenticationFilter(jwtSecret, tokenHeader, tokenPrefix);
     }
 
     // 密码编码器：用于对用户密码进行加密存储

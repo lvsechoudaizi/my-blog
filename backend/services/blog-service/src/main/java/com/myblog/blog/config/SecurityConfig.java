@@ -69,8 +69,10 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
-            @Value("${app.jwt.secret}") String jwtSecret
+            @Value("${app.jwt.secret}") String jwtSecret,
+            @Value("${app.jwt.token-header:Authorization}") String tokenHeader,
+            @Value("${app.jwt.token-prefix:Bearer}") String tokenPrefix
     ) {
-        return new JwtAuthenticationFilter(jwtSecret);
+        return new JwtAuthenticationFilter(jwtSecret, tokenHeader, tokenPrefix);
     }
 }

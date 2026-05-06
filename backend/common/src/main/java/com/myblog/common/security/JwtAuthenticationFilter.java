@@ -26,15 +26,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * */   
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String AUTHORIZATION_PREFIX = "Bearer ";
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_PERMISSIONS = "permissions";
 
     private final WebAuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
     private final String jwtSecret;
+    private final String tokenHeader;
+    private final String tokenPrefixWithSpace;
 
-    public JwtAuthenticationFilter(String jwtSecret) {
+    public JwtAuthenticationFilter(String jwtSecret, String tokenHeader, String tokenPrefix) {
         this.jwtSecret = jwtSecret;
+        this.tokenHeader = tokenHeader == null || tokenHeader.isBlank() ? "Authorization" : tokenHeader.trim();
+        String normalizedPrefix = tokenPrefix == null || tokenPrefix.isBlank() ? "Bearer" : tokenPrefix.trim();
+        this.tokenPrefixWithSpace = normalizedPrefix.endsWith(" ") ? normalizedPrefix : normalizedPrefix + " ";
     }
 
     @Override
@@ -43,8 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        String authorization = request.getHeader("Authorization");
-        if (authorization == null || !authorization.startsWith(AUTHORIZATION_PREFIX)) {
+        String authorization = request.getHeader(tokenHeader);
+        if (authorization == null || !authorization.startsWith(tokenPrefixWithSpace)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authorization.substring(AUTHORIZATION_PREFIX.length());
+        String token = authorization.substring(tokenPrefixWithSpace.length());
         if (!JwtUtils.isTokenValid(token, jwtSecret)) {
             filterChain.doFilter(request, response);
             return;
