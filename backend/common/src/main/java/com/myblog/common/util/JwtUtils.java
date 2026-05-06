@@ -81,7 +81,7 @@ public final class JwtUtils {
     /**
      * 中文描述：获取JWT签名密钥
      * @param secret 用于签名的密钥
-     * @return 密钥对象
+     * @return 密钥对象 签名和验签都使用同一个 secret（HMAC） ，这就是典型的对称密钥方案
      */
     private static SecretKey getSigningKey(String secret) {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);

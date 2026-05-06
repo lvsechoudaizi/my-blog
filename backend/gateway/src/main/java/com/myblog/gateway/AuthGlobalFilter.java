@@ -16,15 +16,12 @@ package com.myblog.gateway;
 
 // 导入 JWT 工具（验证 token 用）
 import com.myblog.common.util.JwtUtils;
-import io.jsonwebtoken.Claims;
-import java.util.Collection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -53,6 +50,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         // 获取请求路径
         String path = exchange.getRequest().getURI().getPath();
+        if (exchange.getRequest().getMethod() != null && "OPTIONS".equals(exchange.getRequest().getMethod().name())) {
+            return chain.filter(exchange);
+        }
         // 白名单：登录接口不校验 token 
         if (isPublicPath(path)) {
             return chain.filter(exchange); // 直接放行
@@ -82,33 +82,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return exchange.getResponse().setComplete(); // // 结束请求
         }
 
-        // token 校验通过后，继续把用户信息从 JWT 里解析出来
-        // subject = 登录时写入的用户名
-        // roles = 登录时写入的角色列表
-        Claims claims;
-        try {
-            claims = JwtUtils.parseToken(token, jwtSecret);
-        } catch (Exception ex) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        }
-        // 从 JWT 里提取用户名、角色、权限
-        String username = claims.getSubject();
-        String rolesHeader = toHeaderValue(claims.get("roles"));
-        String permissionsHeader = toHeaderValue(claims.get("permissions"));
-
-        // 校验通过，添加请求头，告诉下游服务：
-        // 1. 网关已经完成鉴权
-        // 2. 当前登录用户是谁
-        // 3. 当前用户拥有哪些角色
-        ServerHttpRequest request = exchange.getRequest().mutate()
-                .header("X-Auth-Checked", "true")
-                .header("X-User-Name", username == null ? "" : username)
-                .header("X-User-Roles", rolesHeader)
-                .header("X-User-Permissions", permissionsHeader)
-                .build();
-        // 放行请求 → 继续走向后端接口
-        return chain.filter(exchange.mutate().request(request).build());
+        return chain.filter(exchange);
     }
 
     // 设置过滤器优先级 
@@ -119,20 +93,5 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private boolean isPublicPath(String path) {
         return "/api/auth/login".equals(path);
-    }
-
-    // 把 JWT 里的角色信息转成请求头可传输的字符串
-    // 例如 [ADMIN,EDITOR] -> ADMIN,EDITOR
-    private String toHeaderValue(Object value) {
-        if (value == null) {
-            return "";
-        }
-        if (value instanceof Collection<?> collection) {
-            return collection.stream()
-                    .map(String::valueOf)
-                    .reduce((left, right) -> left + "," + right)
-                    .orElse("");
-        }
-        return String.valueOf(value);
     }
 }

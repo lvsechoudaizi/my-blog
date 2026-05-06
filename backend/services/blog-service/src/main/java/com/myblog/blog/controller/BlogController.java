@@ -4,14 +4,22 @@ import com.myblog.common.api.ApiResponse;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.core.Authentication;
+/**
+ * 博客控制器
+ * 1. 提供博客相关 API
+ * 2. 保护 API 路由
+ * 3. 提供当前用户信息接口
+ */
 @RestController
 @RequestMapping("/api/blog")
 public class BlogController {
-
+    /**
+     * 获取博客文章列表接口
+     * 1. 返回所有已发布的博客文章
+     */
     @GetMapping("/posts")
     public ApiResponse<List<Map<String, Object>>> posts() {
         return ApiResponse.success(List.of(
@@ -19,7 +27,10 @@ public class BlogController {
                 Map.of("id", 2, "title", "Roadmap", "status", "DRAFT")
         ));
     }
-
+    /**
+     * 获取项目列表接口
+     * 1. 返回所有已发布的项目
+     */
     @GetMapping("/projects")
     public ApiResponse<List<Map<String, Object>>> projects() {
         return ApiResponse.success(List.of(
@@ -28,16 +39,24 @@ public class BlogController {
         ));
     }
 
-    // 示例接口：演示 blog-service 如何读取网关透传过来的用户信息
+    /**
+     * 获取当前用户信息接口
+     * 1. 返回当前登录用户的用户名、角色、认证状态
+     */
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> currentUser(
-            @RequestHeader(value = "X-User-Name", required = false) String username,
-            @RequestHeader(value = "X-User-Roles", required = false) String roles
+            Authentication authentication
     ) {
+        String username = authentication == null ? "" : String.valueOf(authentication.getPrincipal());
+        List<String> authorities = authentication == null
+                ? List.of()
+                : authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .toList();
         return ApiResponse.success(Map.of(
-                "username", username == null ? "" : username,
-                "roles", roles == null ? "" : roles,
-                "authChecked", true
+                "username", username,
+                "authorities", authorities,
+                "authChecked", authentication != null && authentication.isAuthenticated()
         ));
     }
 }
