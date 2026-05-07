@@ -10,7 +10,7 @@ const { loading } = storeToRefs(userStore)
 
 const form = reactive({
   username: 'admin',
-  password: 'Admin@123',
+  password: '123456',
 })
 
 const errorMessage = ref('')

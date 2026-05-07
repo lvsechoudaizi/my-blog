@@ -3,6 +3,7 @@ package com.myblog.auth.service;
 import com.myblog.auth.dto.CurrentUserResponse;
 import com.myblog.auth.dto.LoginRequest;
 import com.myblog.auth.dto.LoginResponse;
+import com.myblog.auth.entity.SysUser;
 import com.myblog.common.exception.BusinessException;
 import com.myblog.common.util.JwtUtils;
 import java.util.List;
@@ -20,9 +21,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-    private static final String DEMO_USERNAME = "admin";
-    private static final String DEMO_PASSWORD = "Admin@123";
-    private static final String DEMO_DISPLAY_NAME = "系统管理员";
     private static final List<String> DEMO_ROLES = List.of("ADMIN");
     private static final List<String> DEMO_PERMISSIONS = List.of(
             "dashboard:view",
@@ -31,6 +29,7 @@ public class AuthService {
             "project:read"
     );
 
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.jwt.secret}")
@@ -43,7 +42,8 @@ public class AuthService {
      * 构造函数
      * 1. 初始化密码编码器
      */
-    public AuthService(PasswordEncoder passwordEncoder) {
+    public AuthService(UserService userService, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -54,15 +54,30 @@ public class AuthService {
      * 3. 返回登录响应
      * 4. 异常处理：用户名或密码错误
      */
-       public LoginResponse login(LoginRequest request) {
-        boolean validUser = DEMO_USERNAME.equals(request.username());
-        boolean validPassword = passwordEncoder.matches(request.password(), passwordEncoder.encode(DEMO_PASSWORD));
-        if (!validUser || !validPassword) {
+    public LoginResponse login(LoginRequest request) {
+        String username = request.username() == null ? "" : request.username().trim();
+        String rawPassword = request.password() == null ? "" : request.password();
+        if (username.isEmpty() || rawPassword.isEmpty()) {
+            throw new BusinessException("Invalid username or password");
+        }
+        SysUser user = userService.findByUsername(username);
+        if (user == null) {
+            throw new BusinessException("Invalid username or password");
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BusinessException("User is disabled");
+        }
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new BusinessException("Invalid username or password");
+        }
+        String storedPassword = user.getPassword().trim();
+        boolean validPassword = passwordEncoder.matches(rawPassword, storedPassword);
+        if (!validPassword) {
             throw new BusinessException("Invalid username or password");
         }
 
         String token = JwtUtils.generateToken(
-                request.username(),
+                username,
                 Map.of(
                         "roles", DEMO_ROLES,
                         "permissions", DEMO_PERMISSIONS
@@ -70,7 +85,10 @@ public class AuthService {
                 jwtSecret,
                 expirationSeconds
         );
-        return new LoginResponse(token, request.username(), DEMO_DISPLAY_NAME, DEMO_ROLES, DEMO_PERMISSIONS);
+        String displayName = user.getNickname() == null || user.getNickname().isBlank()
+                ? username
+                : user.getNickname().trim();
+        return new LoginResponse(token, username, displayName, DEMO_ROLES, DEMO_PERMISSIONS);
     }
 
     /**
@@ -87,11 +105,28 @@ public class AuthService {
             boolean authenticated
     ) {
         String currentUsername = username == null ? "" : username.trim();
-        String displayName = DEMO_USERNAME.equals(currentUsername) ? DEMO_DISPLAY_NAME : currentUsername;
+        if (currentUsername.isEmpty()) {
+            throw new BusinessException("Invalid username");
+        }
+
+        SysUser user = userService.findByUsername(currentUsername);
+        if (user == null) {
+            throw new BusinessException("User not found");
+        }
+
+        String nickname = user.getNickname() == null ? "" : user.getNickname().trim();
+        String displayName = nickname.isEmpty() ? currentUsername : nickname;
 
         return new CurrentUserResponse(
+                user.getId(),
                 currentUsername,
                 displayName,
+                nickname,
+                user.getAvatar(),
+                user.getEmail(),
+                user.getStatus(),
+                user.getCreateTime(),
+                user.getUpdateTime(),
                 roles == null ? List.of() : roles,
                 permissions == null ? List.of() : permissions,
                 authenticated

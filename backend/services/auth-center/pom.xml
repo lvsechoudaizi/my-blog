@@ -37,11 +37,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
         </dependency>
-        <!-- MyBatis-Plus -->
+        <!-- MyBatis-Plus MyBatis-Plus 3.5.7 默认带的 mybatis-spring 版本是 2.1.2-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>3.5.7</version>
+        </dependency>
+        <!-- MyBatis-Spring 显式覆盖 mybatis-spring 到 Spring 6 兼容的 3.x 版本 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>3.0.3</version>
         </dependency>
         <!-- MySQL驱动 -->
         <dependency>
