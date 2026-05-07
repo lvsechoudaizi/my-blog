@@ -38,11 +38,11 @@
             <artifactId>spring-boot-devtools</artifactId>
         </dependency>
         <!-- MyBatis-Plus -->
-        <!-- <dependency>
+        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.3.1</version>
-        </dependency> -->
+            <version>3.5.7</version>
+        </dependency>
         <!-- MySQL驱动 -->
         <dependency>
             <groupId>com.mysql</groupId>
