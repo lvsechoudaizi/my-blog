@@ -21,15 +21,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-    private static final List<String> DEMO_ROLES = List.of("ADMIN");
-    private static final List<String> DEMO_PERMISSIONS = List.of(
-            "dashboard:view",
-            "blog:read",
-            "blog:write",
-            "project:read"
-    );
-
     private final UserService userService;
+    private final AuthorizationService authorizationService;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.jwt.secret}")
@@ -42,8 +35,13 @@ public class AuthService {
      * 构造函数
      * 1. 初始化密码编码器
      */
-    public AuthService(UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthService(
+            UserService userService,
+            AuthorizationService authorizationService,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userService = userService;
+        this.authorizationService = authorizationService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -76,11 +74,13 @@ public class AuthService {
             throw new BusinessException("Invalid username or password");
         }
 
+        List<String> userRoles = authorizationService.getUserRoles(user.getId());
+        List<String> userPermissions = authorizationService.getUserPermissions(user.getId());
         String token = JwtUtils.generateToken(
                 username,
                 Map.of(
-                        "roles", DEMO_ROLES,
-                        "permissions", DEMO_PERMISSIONS
+                        "roles", userRoles,
+                        "permissions", userPermissions
                 ),
                 jwtSecret,
                 expirationSeconds
@@ -88,7 +88,7 @@ public class AuthService {
         String displayName = user.getNickname() == null || user.getNickname().isBlank()
                 ? username
                 : user.getNickname().trim();
-        return new LoginResponse(token, username, displayName, DEMO_ROLES, DEMO_PERMISSIONS);
+        return new LoginResponse(token, username, displayName, userRoles, userPermissions);
     }
 
     /**
