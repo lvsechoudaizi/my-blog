@@ -12,7 +12,7 @@
 
     <artifactId>common</artifactId>
     <name>common</name>
-    <description>Shared dependencies and utilities</description>
+    <description>common模块</description>
 
     <dependencies>
         <dependency>
