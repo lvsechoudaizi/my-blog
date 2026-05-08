@@ -23,7 +23,7 @@ async function handleRefreshUser() {
 }
 
 async function handleLogout() {
-  userStore.logout()
+  await userStore.logoutUser()
   await router.push('/login')
 }
 </script>

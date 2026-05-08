@@ -1,13 +1,13 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { getCurrentUser, login, type LoginRequest } from '../api/auth'
+import { getCurrentUser, login, logout as logoutApi, type LoginRequest } from '../api/auth'
 import {
   clearPersistedUserProfile,
   getPersistedUserProfile,
   setPersistedUserProfile,
   type PersistedUserProfile,
 } from '../utils/auth-storage'
-import { clearToken, getToken, setToken } from '../utils/token'
+import { clearRefreshToken, clearToken, getRefreshToken, getToken, setRefreshToken, setToken } from '../utils/token'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(getToken())
@@ -35,8 +35,22 @@ export const useUserStore = defineStore('user', () => {
 
   function logout() {
     clearToken()
+    clearRefreshToken()
     token.value = ''
     applyProfile(null)
+  }
+
+  async function logoutUser() {
+    const refreshToken = getRefreshToken()
+    logout()
+    if (!refreshToken) {
+      return
+    }
+    try {
+      await logoutApi({ refreshToken })
+    } catch {
+      // Ignore network/auth errors when logging out remotely.
+    }
   }
 
   async function refreshCurrentUser() {
@@ -76,6 +90,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const result = await login(payload)
       setToken(result.token)
+      setRefreshToken(result.refreshToken)
       token.value = result.token
 
       applyProfile({
@@ -129,5 +144,6 @@ export const useUserStore = defineStore('user', () => {
     refreshCurrentUser,
     initializeAuth,
     logout,
+    logoutUser,
   }
 })

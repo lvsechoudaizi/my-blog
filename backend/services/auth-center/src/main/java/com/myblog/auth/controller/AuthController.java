@@ -3,6 +3,8 @@ package com.myblog.auth.controller;
 import com.myblog.auth.dto.CurrentUserResponse;
 import com.myblog.auth.dto.LoginRequest;
 import com.myblog.auth.dto.LoginResponse;
+import com.myblog.auth.dto.LogoutRequest;
+import com.myblog.auth.dto.RefreshTokenRequest;
 import com.myblog.auth.service.AuthService;
 import com.myblog.common.api.ApiResponse;
 import com.myblog.common.exception.BusinessException;
@@ -37,6 +39,17 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success("Login success", authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ApiResponse.success("Refresh success", authService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request.refreshToken());
+        return ApiResponse.success("Logout success", null);
     }
 
     @GetMapping("/me")

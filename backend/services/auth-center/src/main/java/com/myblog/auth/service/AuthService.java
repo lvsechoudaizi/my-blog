@@ -6,8 +6,12 @@ import com.myblog.auth.dto.LoginResponse;
 import com.myblog.auth.entity.SysUser;
 import com.myblog.common.exception.BusinessException;
 import com.myblog.common.util.JwtUtils;
+import com.myblog.redis.service.RedisService;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,12 +28,16 @@ public class AuthService {
     private final UserService userService;
     private final AuthorizationService authorizationService;
     private final PasswordEncoder passwordEncoder;
+    private final RedisService redisService;
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
     @Value("${app.jwt.expiration-seconds:7200}")
     private long expirationSeconds;
+
+    @Value("${app.auth.refresh-token-expiration-seconds:2592000}")
+    private long refreshTokenExpirationSeconds;
 
     /**
      * 构造函数
@@ -38,11 +46,13 @@ public class AuthService {
     public AuthService(
             UserService userService,
             AuthorizationService authorizationService,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            RedisService redisService
     ) {
         this.userService = userService;
         this.authorizationService = authorizationService;
         this.passwordEncoder = passwordEncoder;
+        this.redisService = redisService;
     }
 
     /**
@@ -76,6 +86,7 @@ public class AuthService {
 
         List<String> userRoles = authorizationService.getUserRoles(user.getId());
         List<String> userPermissions = authorizationService.getUserPermissions(user.getId());
+
         String token = JwtUtils.generateToken(
                 username,
                 Map.of(
@@ -85,10 +96,131 @@ public class AuthService {
                 jwtSecret,
                 expirationSeconds
         );
+        // 生成刷新令牌
+        String refreshToken = generateRefreshToken();
+        // 生成刷新令牌有效负载
+        RefreshTokenPayload refreshTokenPayload = new RefreshTokenPayload(
+                user.getId(),
+                username,
+                Instant.now().getEpochSecond()
+        );
+        // 缓存刷新令牌
+        redisService.setCacheObject(
+                refreshTokenKey(refreshToken),
+                refreshTokenPayload,
+                refreshTokenExpirationSeconds,
+                TimeUnit.SECONDS
+        );
+        // 缓存用户刷新令牌
+        redisService.setCacheObject(
+                userRefreshTokenKey(user.getId()),
+                refreshToken,
+                refreshTokenExpirationSeconds,
+                TimeUnit.SECONDS
+        );
+
         String displayName = user.getNickname() == null || user.getNickname().isBlank()
                 ? username
                 : user.getNickname().trim();
-        return new LoginResponse(token, username, displayName, userRoles, userPermissions);
+        return new LoginResponse(token, username, displayName, userRoles, userPermissions, refreshToken, expirationSeconds);
+    }
+
+    public LoginResponse refresh(String refreshToken) {
+        String currentRefreshToken = refreshToken == null ? "" : refreshToken.trim();
+        if (currentRefreshToken.isEmpty()) {
+            throw new BusinessException("Invalid refresh token");
+        }
+
+        RefreshTokenPayload payload = redisService.getCacheObject(refreshTokenKey(currentRefreshToken));
+        if (payload == null || payload.userId() == null) {
+            throw new BusinessException("Invalid refresh token");
+        }
+
+        String latestRefreshToken = redisService.getCacheObject(userRefreshTokenKey(payload.userId()));
+        if (latestRefreshToken == null || !latestRefreshToken.equals(currentRefreshToken)) {
+            throw new BusinessException("Invalid refresh token");
+        }
+
+        SysUser user = userService.getById(payload.userId());
+        if (user == null) {
+            throw new BusinessException("User not found");
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BusinessException("User is disabled");
+        }
+
+        String username = user.getUsername() == null ? "" : user.getUsername().trim();
+        if (username.isEmpty()) {
+            throw new BusinessException("Invalid username");
+        }
+
+        List<String> userRoles = authorizationService.getUserRoles(user.getId());
+        List<String> userPermissions = authorizationService.getUserPermissions(user.getId());
+        String token = JwtUtils.generateToken(
+                username,
+                Map.of(
+                        "roles", userRoles,
+                        "permissions", userPermissions
+                ),
+                jwtSecret,
+                expirationSeconds
+        );
+
+        String newRefreshToken = generateRefreshToken();
+        RefreshTokenPayload newPayload = new RefreshTokenPayload(
+                user.getId(),
+                username,
+                Instant.now().getEpochSecond()
+        );
+        redisService.deleteObject(refreshTokenKey(currentRefreshToken));
+        redisService.setCacheObject(
+                refreshTokenKey(newRefreshToken),
+                newPayload,
+                refreshTokenExpirationSeconds,
+                TimeUnit.SECONDS
+        );
+        redisService.setCacheObject(
+                userRefreshTokenKey(user.getId()),
+                newRefreshToken,
+                refreshTokenExpirationSeconds,
+                TimeUnit.SECONDS
+        );
+
+        String displayName = user.getNickname() == null || user.getNickname().isBlank()
+                ? username
+                : user.getNickname().trim();
+        return new LoginResponse(token, username, displayName, userRoles, userPermissions, newRefreshToken, expirationSeconds);
+    }
+
+    public void logout(String refreshToken) {
+        String currentRefreshToken = refreshToken == null ? "" : refreshToken.trim();
+        if (currentRefreshToken.isEmpty()) {
+            return;
+        }
+
+        RefreshTokenPayload payload = redisService.getCacheObject(refreshTokenKey(currentRefreshToken));
+        if (payload == null || payload.userId() == null) {
+            redisService.deleteObject(refreshTokenKey(currentRefreshToken));
+            return;
+        }
+
+        redisService.deleteObject(refreshTokenKey(currentRefreshToken));
+        String latestRefreshToken = redisService.getCacheObject(userRefreshTokenKey(payload.userId()));
+        if (latestRefreshToken != null && latestRefreshToken.equals(currentRefreshToken)) {
+            redisService.deleteObject(userRefreshTokenKey(payload.userId()));
+        }
+    }
+
+    private static String refreshTokenKey(String refreshToken) {
+        return "auth:refresh:" + refreshToken;
+    }
+
+    private static String userRefreshTokenKey(Long userId) {
+        return "auth:user:" + userId + ":refresh";
+    }
+
+    private static String generateRefreshToken() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     /**

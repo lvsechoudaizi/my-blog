@@ -92,6 +92,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return "/api/auth/login".equals(path);
+        return "/api/auth/login".equals(path)
+                || "/api/auth/refresh".equals(path)
+                || "/api/auth/logout".equals(path);
     }
 }

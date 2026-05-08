@@ -7,6 +7,8 @@ public record LoginResponse(
         String username,
         String displayName,
         List<String> roles,
-        List<String> permissions
+        List<String> permissions,
+        String refreshToken,
+        long expiresIn
 ) {
 }
