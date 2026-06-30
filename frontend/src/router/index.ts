@@ -5,7 +5,12 @@ import ForbiddenView from '../views/ForbiddenView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import PostsView from '../views/PostsView.vue'
+import CategoriesView from '../views/CategoriesView.vue'
+import TagsView from '../views/TagsView.vue'
+import ProjectsView from '../views/ProjectsView.vue'
+import ProfileView from '../views/ProfileView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import LogsView from '../views/LogsView.vue'
 import { getPersistedUserProfile } from '../utils/auth-storage'
 import { hasAnyPermission } from '../utils/permission'
 import { getToken } from '../utils/token'
@@ -30,9 +35,39 @@ const router = createRouter({
           meta: { requiresAuth: true, permissions: ['blog:read'] },
         },
         {
+          path: 'categories',
+          name: 'categories',
+          component: CategoriesView,
+          meta: { requiresAuth: true, permissions: ['blog:read'] },
+        },
+        {
+          path: 'tags',
+          name: 'tags',
+          component: TagsView,
+          meta: { requiresAuth: true, permissions: ['blog:read'] },
+        },
+        {
+          path: 'projects',
+          name: 'projects',
+          component: ProjectsView,
+          meta: { requiresAuth: true, permissions: ['blog:read'] },
+        },
+        {
+          path: 'profile',
+          name: 'profile',
+          component: ProfileView,
+          meta: { requiresAuth: true },
+        },
+        {
           path: 'settings',
           name: 'settings',
           component: SettingsView,
+          meta: { requiresAuth: true, permissions: ['system:admin'] },
+        },
+        {
+          path: 'logs',
+          name: 'logs',
+          component: LogsView,
           meta: { requiresAuth: true, permissions: ['system:admin'] },
         },
       ],

@@ -1,103 +1,127 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useUserStore } from '../stores/user'
-import { hasAnyPermission } from '../utils/permission'
+import { useRouter } from 'vue-router'
 
-const userStore = useUserStore()
-const { token, username, displayName, roles, permissions, refreshing } = storeToRefs(userStore)
+const router = useRouter()
 
-const shortToken = computed(() => {
-  return token.value ? `${token.value.slice(0, 32)}...` : '暂无 Token'
-})
+// Mock data
+const stats = [
+  { label: '文章总数', value: 24, icon: '📝', color: '#60a5fa' },
+  { label: '项目总数', value: 7, icon: '🚀', color: '#a78bfa' },
+  { label: '总访问量', value: 12580, icon: '👁️', color: '#34d399' },
+  { label: '今日访问量', value: 156, icon: '📈', color: '#fbbf24' },
+]
 
-const canReadPosts = computed(() => hasAnyPermission(permissions.value, ['blog:read']))
-const canWritePosts = computed(() => hasAnyPermission(permissions.value, ['blog:write']))
+const recentPosts = [
+  { id: 1, title: 'Vue3 组合式 API 深度解析', category: '前端进阶', status: '已发布', date: '2026-06-25' },
+  { id: 2, title: 'Docker Compose 部署 SpringBoot + Vue 全栈项目', category: 'Docker部署', status: '已发布', date: '2026-06-20' },
+  { id: 3, title: 'AI 辅助编程的正确打开方式', category: 'AI应用', status: '草稿', date: '2026-06-18' },
+]
+
+const recentProjects = [
+  { id: 1, name: 'AI神匠投诉处理平台', category: '商业项目', techStack: 'Vue3/Vite/Pinia', updatedAt: '2026-06-26' },
+  { id: 2, name: 'My Blog 全栈个人官网', category: '自研项目', techStack: 'Next.js/Vue3/SpringBoot', updatedAt: '2026-06-24' },
+]
+
+function navigateTo(path: string) {
+  router.push(path)
+}
 </script>
 
 <template>
   <main class="page home-page">
-    <section class="card">
-      <div class="intro">
-        <p class="eyebrow">My Blog Admin</p>
-        <h1>Hello World</h1>
-        <p class="description">
-          这里先作为登录后的默认首页，后续可以继续扩展为仪表盘、文章管理、项目管理等模块。
-        </p>
+    <!-- 统计卡片 -->
+    <section class="stats-grid">
+      <div
+        v-for="stat in stats"
+        :key="stat.label"
+        class="stat-card card"
+      >
+        <div class="stat-icon" :style="{ background: stat.color + '20', color: stat.color }">
+          {{ stat.icon }}
+        </div>
+        <div class="stat-info">
+          <p class="stat-value">{{ stat.value.toLocaleString() }}</p>
+          <p class="stat-label">{{ stat.label }}</p>
+        </div>
       </div>
     </section>
 
-    <section class="panel-grid">
-      <article class="panel">
-        <h2>当前状态</h2>
-        <dl class="result-list">
-          <div>
-            <dt>路由状态</dt>
-            <dd>已进入首页，占位完成</dd>
+    <!-- 快捷操作 -->
+    <section class="card quick-actions">
+      <h2>快捷操作</h2>
+      <div class="actions-grid">
+        <button type="button" class="action-btn" @click="navigateTo('/posts?action=new')">
+          <span class="action-icon">✏️</span>
+          <span>新增文章</span>
+        </button>
+        <button type="button" class="action-btn" @click="navigateTo('/projects?action=new')">
+          <span class="action-icon">📦</span>
+          <span>新增项目</span>
+        </button>
+        <button type="button" class="action-btn" @click="navigateTo('/profile')">
+          <span class="action-icon">👤</span>
+          <span>修改个人信息</span>
+        </button>
+        <button type="button" class="action-btn" @click="navigateTo('/settings')">
+          <span class="action-icon">⚙️</span>
+          <span>修改网站配置</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 最近操作区 -->
+    <section class="recent-grid">
+      <article class="card">
+        <h2>最近文章</h2>
+        <div class="recent-list">
+          <div
+            v-for="post in recentPosts"
+            :key="post.id"
+            class="recent-item"
+            @click="navigateTo(`/posts?id=${post.id}`)"
+          >
+            <div class="recent-item-main">
+              <p class="recent-title">{{ post.title }}</p>
+              <p class="recent-meta">
+                <span class="recent-category">{{ post.category }}</span>
+                <span class="recent-date">{{ post.date }}</span>
+              </p>
+            </div>
+            <span
+              class="status-badge"
+              :class="post.status === '已发布' ? 'published' : 'draft'"
+            >
+              {{ post.status }}
+            </span>
           </div>
-          <div>
-            <dt>当前用户</dt>
-            <dd>{{ displayName || username || '暂无用户信息' }}</dd>
-          </div>
-          <div>
-            <dt>登录账号</dt>
-            <dd>{{ username || '暂无账号信息' }}</dd>
-          </div>
-          <div>
-            <dt>角色列表</dt>
-            <dd>{{ roles.length ? roles.join(', ') : '暂无角色信息' }}</dd>
-          </div>
-          <div>
-            <dt>权限列表</dt>
-            <dd>{{ permissions.length ? permissions.join(', ') : '暂无权限信息' }}</dd>
-          </div>
-          <div>
-            <dt>登录凭证</dt>
-            <dd class="token">{{ shortToken }}</dd>
-          </div>
-        </dl>
+        </div>
+        <button type="button" class="link-button view-all" @click="navigateTo('/posts')">
+          查看全部文章 →
+        </button>
       </article>
 
-      <article class="panel">
-        <h2>后续预留</h2>
-        <dl class="result-list">
-          <div>
-            <dt>模块一</dt>
-            <dd>后台仪表盘</dd>
+      <article class="card">
+        <h2>最近项目</h2>
+        <div class="recent-list">
+          <div
+            v-for="project in recentProjects"
+            :key="project.id"
+            class="recent-item"
+            @click="navigateTo(`/projects?id=${project.id}`)"
+          >
+            <div class="recent-item-main">
+              <p class="recent-title">{{ project.name }}</p>
+              <p class="recent-meta">
+                <span class="recent-category">{{ project.category }}</span>
+                <span class="recent-tech">{{ project.techStack }}</span>
+              </p>
+            </div>
+            <span class="recent-date">{{ project.updatedAt }}</span>
           </div>
-          <div>
-            <dt>模块二</dt>
-            <dd>博客文章管理</dd>
-          </div>
-          <div>
-            <dt>模块三</dt>
-            <dd>项目管理与配置中心接入</dd>
-          </div>
-          <div>
-            <dt>用户刷新状态</dt>
-            <dd>{{ refreshing ? '正在刷新用户信息' : '用户信息已就绪' }}</dd>
-          </div>
-        </dl>
-      </article>
-
-      <article class="panel">
-        <h2>权限预留</h2>
-        <dl class="result-list">
-          <div>
-            <dt>可访问文章管理</dt>
-            <dd>{{ canReadPosts ? '是' : '否' }}</dd>
-          </div>
-          <div>
-            <dt>可新增文章</dt>
-            <dd>{{ canWritePosts ? '是' : '否' }}</dd>
-          </div>
-          <div>
-            <dt>按钮控制</dt>
-            <dd>
-              <button type="button" class="secondary-button" v-permission="'blog:write'">新增文章</button>
-            </dd>
-          </div>
-        </dl>
+        </div>
+        <button type="button" class="link-button view-all" @click="navigateTo('/projects')">
+          查看全部项目 →
+        </button>
       </article>
     </section>
   </main>

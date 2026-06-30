@@ -44,7 +44,7 @@ services:
       - nacos-logs:/home/nacos/logs
     networks:
       - blog-network
-
+      
 volumes:
   mysql-data:
   redis-data:

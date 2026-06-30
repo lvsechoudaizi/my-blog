@@ -127,6 +127,51 @@ npm run dev
 npm run build
 ```
 
+## 站点（site）启动
+
+`/site` 是一个 Next.js 项目（默认端口 `3000`）。当前 [next.config.ts](file:///Users/lijianhua/Documents/其他/个人官网/my-blog/site/next.config.ts) 配置了 `output: "export"`，因此 `npm run build` 会生成静态导出目录 `out/`。
+
+### 安装依赖
+```bash
+cd /Users/lijianhua/Documents/其他/个人官网/my-blog/site
+npm install
+```
+
+### 启动开发服务
+```bash
+npm run dev
+```
+
+浏览器打开：
+```text
+http://localhost:3000
+```
+
+如果端口冲突，改用其它端口（例如 `3001`）：
+```bash
+npm run dev -- -p 3001
+```
+
+### 构建验证（静态导出）
+```bash
+npm run build
+```
+
+构建产物目录：
+```text
+/Users/lijianhua/Documents/其他/个人官网/my-blog/site/out
+```
+
+### 本地预览 out（可选）
+```bash
+python3 -m http.server 8000 --directory out
+```
+
+浏览器打开：
+```text
+http://localhost:8000
+```
+
 ## 联调顺序
 1. 先确认 Nacos 正常
 2. 再确认后端三个服务都已启动
@@ -173,7 +218,7 @@ curl http://localhost:8848/nacos
 ## 当前推荐习惯
 - 每次启动后端前，先确认 Nacos
 - 每次改 `docker-compose.yml` 后，重建相关容器
-- 每次改前端样式结构后，跑一次 `npm run build`
+- 每次改 frontend/site 样式结构后，跑一次 `npm run build`
 - 每次改网关或鉴权链路后，至少做一次登录联调
 
 ## 后续可继续补充
